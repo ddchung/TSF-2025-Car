@@ -1,36 +1,42 @@
-# Interface for the RC Car API
+from rc_car_api_internal import pins
 
-import adapter
+def start_move_forward(speed):
+    """speed from 0-100"""
+    pins.setSpeed(speed)
 
-def initCar():
-    """Initialize the car"""
-    pass # Adapter auto-inits when imported
+def start_move_backward(speed):
+    """speed from 0-100"""
+    pins.setSpeed(-speed)
 
-def moveForward(speed, time=2):
-    """Move the car forward by a certain distance(in cm) in a certain time(in seconds). Note that distance is ignored for now"""
-    adapter.start_move_forward(speed)
+def stop_move():
+    pins.setSpeed(0)
 
-def moveBackward(speed, time=2):
-    """Move the car backward by a certain distance(in cm) in a certain time(in seconds). Note that distance is ignored for now"""
-    adapter.moveBackward(speed)
+def set_steering_angle(angle):
+    """angle from -90(left) to 90(right), 0 in middle"""
+    pins.setSteeringAngle(angle)
 
-def setSteeringAngle(speed):
-    """Set the steering angle of the car(-90 to 90, 0 is straight)"""
-    adapter.setSteeringAngle(speed)
-
-def stop():
-    """Cuts short any movement in progress"""
-    adapter.stop_move()
-
-def readDistance(sensor="front"):
-    """Read from a distance sensor(front, front_left, front_right, back_left, back_right)"""
-    
-    return 0
-
-def setLight(light="headlights", state="on"):
+def set_light(light, brightness):
     """
-    Manually turn on/off a light(headlights, brake_lights, turn_signal_left, turn_signal_right).
-    Note that turn signals automaticaly blink when on.
-    Brake lights and turn signals are automatically managed, this function is to manually override them.
+    brightness: 0-100
+    lights:
+    - 0 headlight
+    - 1 taillight
+    - 3 sun
     """
-    pass
+    if light == 0:
+        pins.setHeadlights(brightness)
+    elif light == 1:
+        pins.setTaillights(brightness)
+    elif light == 3:
+        print("\nWARN: Sun not implemented yet\n")
+
+def read_sensor(sensor):
+    """
+    sensors:
+    - 0 front
+    - 1 back
+    - 2 left
+    - 3 right
+    """
+    print("\nWARN: Sensors not implemented yet\n")
+    return 15 # cm
