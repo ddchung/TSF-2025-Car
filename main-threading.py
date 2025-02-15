@@ -116,8 +116,8 @@ def predict_sign(frame):
     global sign_model
     main_results = sign_model.predict(frame, conf=conf)
 
-sign_model = YOLO(r".\traffic_sign_detector.pt") # I tested this on my computer; just change the path
-person_model = YOLO(r".\yolov10n.pt")  # Use a smaller model like yolov8n for speed
+sign_model = YOLO("./traffic_sign_detector.pt") # I tested this on my computer; just change the path
+person_model = YOLO("./yolov10n.pt")  # Use a smaller model like yolov8n for speed
 conf = 0.6
 speed = 16 # the slowest speed limit
 prev_stop_area_ratio = 100 # making it so it stops no matter what for the first stop sign detection
@@ -205,7 +205,8 @@ while ret:
                 rc_car_api.start_move_forward(speed)
                 print("MOVING FORWARD!")
         
-        new_frame = cv2.line(new_frame, (cap_width//2, 0), (cap_width//2, cap_height), (0, 0, 255), 1)
+        steering_angle = lane_follower.compute_steering_angle(frame, lane_lines)
+        rc_car_api.set_steering_angle(steering_angle)
         cv2.imshow("Traffic sign detector", new_frame)
         t1 = time.time()
         print(t1-t0)

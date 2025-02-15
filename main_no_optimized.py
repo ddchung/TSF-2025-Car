@@ -1,13 +1,13 @@
 import cv2
 import time
 from ultralytics import YOLO
-import adapter
+import rc_car_api
 import lane_follower
 import numpy as np 
 
 # import threading
-sign_model = YOLO(r".\traffic_sign_detector.pt") # I tested this on my computer; just change the path
-person_model = YOLO(r".\yolov10n.pt")  # Use a smaller model like yolov8n for speed
+sign_model = YOLO(r"./traffic_sign_detector.pt") # I tested this on my computer; just change the path
+person_model = YOLO(r"./yolov10n.pt")  # Use a smaller model like yolov8n for speed
 conf = 0.6
 speed = 16 # the slowest speed limit
 prev_stop_area_ratio = 100 # making it so it stops no matter what for the first stop sign detection
@@ -25,14 +25,14 @@ ret = True
 
 def light_transition(light, start_light_val, end_light_val): # extra idea that can be implemented later
     """Gets a gradual transition between 2 different light values, for 3 seconds """
-    adapter.set_light(light, start_light_val)
+    rc_car_api.set_light(light, start_light_val)
     common_dif = (start_light_val-end_light_val)/12
     cur_light = start_light_val
     while cur_light - common_dif > 0:
         cur_light -= common_dif
-        adapter.set_light(light, cur_light)
+        rc_car_api.set_light(light, cur_light)
         time.sleep(0.25)
-    adapter.set_light(light, end_light_val)
+    rc_car_api.set_light(light, end_light_val)
     pass 
 
 def logs(detected, percent, coordinate): # all the values should be changed later
@@ -47,12 +47,12 @@ def logs(detected, percent, coordinate): # all the values should be changed late
             match detected.split()[0].lower(): # getting the first word of the detected result
                 case "stop":
                     if percent < prev_stop_area_ratio and not stopped: # stopping when the new detected stop sign is smaller than the previous frame's stop sign
-                        adapter.stop_move()
-                        adapter.set_light(0, 100) # if making lights transition, do threading.Thread(target=light_transition, args=(0, 0, 100)).start() 
+                        rc_car_api.stop_move()
+                        rc_car_api.set_light(0, 100) # if making lights transition, do threading.Thread(target=light_transition, args=(0, 0, 100)).start() 
                         time.sleep(3) # don't want to do the join()
                         print("STOPPING AT STOP SIGN")
-                        adapter.start_move_forward(speed)
-                        adapter.set_light(0, 0) # if making lights transition, do threading.Thread(target=light_transition, args=(0, 100, 0)).start()
+                        rc_car_api.start_move_forward(speed)
+                        rc_car_api.set_light(0, 0) # if making lights transition, do threading.Thread(target=light_transition, args=(0, 100, 0)).start()
                         stopped = True
                     else: 
                         print("GOING PAST STOP SIGN")
@@ -63,12 +63,12 @@ def logs(detected, percent, coordinate): # all the values should be changed late
                         print("GOING PAST RED LIGHT") # Red light detected but too big; not making the car stop at the middle of the intersection
                         stopped = False # maybe unnecessary but still try
                     else:
-                        adapter.set_light(100,1) # light transition may not work; though not necessary
-                        adapter.stop_move()
+                        rc_car_api.set_light(100,1) # light transition may not work; though not necessary
+                        rc_car_api.stop_move()
                         stopped = True
                         print("STOPPING AT RED LIGHT")
                 case "green":
-                    adapter.set_light(0, 1) 
+                    rc_car_api.set_light(0, 1) 
                     stopped = False
                     print("GOING PAST GREEN LIGHT")
                 case "speed":
@@ -126,14 +126,14 @@ def check_obj_on_rd(coordinate, data):
 
 
 while ret:
-    front_distance = adapter.read_sensor(0)
+    front_distance = rc_car_api.read_sensor(0)
 
     if front_distance and front_distance < 10 and front_distance > 0: # change the distances. will it also register signs that come near the car?
         if front_distance > 5:
-            adapter.stop_move()
+            rc_car_api.stop_move()
             print("STOPPING AT OBSTACLE")
         else:
-            adapter.start_move_backward(speed)
+            rc_car_api.start_move_backward(speed)
             print("MOVING BACKWARDS FROM AN OBSTACLE THAT IS TOO CLOSE")
     else:
         ret, frame = cap.read(0)
@@ -168,7 +168,7 @@ while ret:
 
                 if res != -1:
                     print("STOPPING FOR PERSON ON ROAD")
-                    adapter.stop_move() 
+                    rc_car_api.stop_move() 
                     person_on_road = True
                 new_frame = draw_box(new_frame, np.array([(x_center-hw, y_center+hh), (x_center+hw, y_center+hh), (x_center+hw, y_center-hh), (x_center-hw, y_center-hh)], dtype=np.int32), color=(0,255,0), res=res, point=coordinate)
         if not person_on_road:
@@ -188,10 +188,11 @@ while ret:
                         hh = box_height//2
                         new_frame = draw_box(new_frame, np.array([(x_center-hw, y_center+hh), (x_center+hw, y_center+hh), (x_center+hw, y_center-hh), (x_center-hw, y_center-hh)], dtype=np.int32))
             if not stopped:
-                adapter.start_move_forward(speed)
+                rc_car_api.start_move_forward(speed)
                 print("MOVING FORWARD!")
         
-        new_frame = cv2.line(new_frame, (cap_width//2, 0), (cap_width//2, cap_height), (0, 0, 255), 1)
+        steering_angle = lane_follower.compute_steering_angle(frame, lane_lines) - 90
+        rc_car_api.set_steering_angle(steering_angle)
         cv2.imshow("Traffic sign detector", new_frame)
         t1 = time.time()
         print(t1-t0)
