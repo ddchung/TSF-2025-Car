@@ -9,6 +9,8 @@ __pycache__/
 # Python venv
 pyvenv.cfg
 bin/
+include/python3.11/
+share/
 
 # Distribution / packaging
 .Python
