@@ -243,7 +243,8 @@ def brightness(frame):
     average_light_level = int(np.mean(gray_image))
     if average_light_level < 80:
         rc_car_api.set_light(3, 70)
-    return average_light_level
+        return True
+    return False
 
 def main():
     cap = cv2.VideoCapture(0)
@@ -254,6 +255,7 @@ def main():
     if not ok:
         print("Failed to read first frame")
         exit(1)
+
     frame.set(frame_)
 
     # Start the predictor threads
@@ -264,7 +266,12 @@ def main():
         ok, frame_ = cap.read()
         if not ok:
             break
+
+        too_dark = brightness(frame_)
+        if too_dark:
+            _, frame_ = cap.read() # reads again 
         frame.set(frame_)
+
         objects = detected_objects.get()
         print_summary()
         for object in sort_objects(objects):
