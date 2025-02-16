@@ -26,10 +26,11 @@ def recv():
         return frame
     return None
 
-while True:
-    frame = recv()
-    if frame is None:
-        break
-    cv2.imshow("frame", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+if __name__ == "__main__":
+    while True:
+        frame = recv()
+        if frame is None:
+            break
+        cv2.imshow("frame", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
