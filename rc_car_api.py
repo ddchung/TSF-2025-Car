@@ -28,7 +28,9 @@ def set_light(light, brightness):
     elif light == 1:
         pins.setTaillights(brightness)
     elif light == 3:
-        print("\nWARN: Sun not implemented yet\n")
+        pins.setSun(brightness)
+    else:
+        print("\nWARN: Invalid light", light, "\n")
 
 def read_sensor(sensor):
     """

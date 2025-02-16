@@ -1,7 +1,7 @@
 import platform
 
 # Crude raspberry pi detection
-if platform.platform()[:5].lower() == "linux":
+if "linux" in platform.platform().lower():
     import RPi.GPIO as GPIO
     from gpiozero.pins.pigpio import PiGPIOFactory
     from gpiozero import Servo
@@ -38,19 +38,48 @@ if platform.platform()[:5].lower() == "linux":
 
     # Steering Servos
 
-    STEERING_MAX_LEFT = -70
-    STEERING_MAX_RIGHT = 70
-    STEERING_OFFSET = -10 #< Calibrate this, maxes are evaluated first
-
     SERVO_FR_P = 6
     SERVO_FL_P = 5
 
+    # helper
+    def MAP_RANGE(value, in_min, in_max, out_min, out_max):
+        return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+    def SERVO_FL_COMP(angle):
+        angle = int(angle)
+        if angle == 0:
+            return -10 / 90
+        if angle > 0:
+            if angle > 30:
+                angle = 30
+            return MAP_RANGE(angle, 0, 30, -10, 45) / 90
+        if angle < 0:
+            if angle < -45:
+                angle = -45
+            return MAP_RANGE(angle, 0, -45, -10, -90) / 90
+        assert False
+    
+    def SERVO_FR_COMP(angle):
+        angle = int(angle)
+        if angle == 0:
+            return -2 / 90
+        if angle > 0:
+            if angle > 30:
+                angle = 30
+            return MAP_RANGE(angle, 0, 30, -2, 45) / 90
+        if angle < 0:
+            if angle < -45:
+                angle = -45
+            return MAP_RANGE(angle, 0, -45, -2, -90) / 90
+        assert False
+    
     # Lights
 
     HEADLIGHTS = 24
     TAILLIGHTS = 23
+    SUN = 12
 
-    PIN_LIST = [SERVO_FR_P, SERVO_FL_P, WHEEL_FL_P1, WHEEL_FL_P2, WHEEL_FR_P1, WHEEL_FR_P2, WHEEL_BL_P1, WHEEL_BL_P2, WHEEL_BR_P1, WHEEL_BR_P2, HEADLIGHTS, TAILLIGHTS]
+    PIN_LIST = [SERVO_FR_P, SERVO_FL_P, WHEEL_FL_P1, WHEEL_FL_P2, WHEEL_FR_P1, WHEEL_FR_P2, WHEEL_BL_P1, WHEEL_BL_P2, WHEEL_BR_P1, WHEEL_BR_P2, HEADLIGHTS, TAILLIGHTS, SUN]
 
     GPIO.setmode(GPIO.BCM)
 
@@ -61,6 +90,7 @@ if platform.platform()[:5].lower() == "linux":
 
     HEADLIGHT_OBJ = PWMOutputDevice(HEADLIGHTS, pin_factory=PWM_PIN_FACTORY)
     TAILLIGHT_OBJ = PWMOutputDevice(TAILLIGHTS, pin_factory=PWM_PIN_FACTORY)
+    SUN_OBJ = PWMOutputDevice(SUN, pin_factory=PWM_PIN_FACTORY)
 
     WHEEL_FR_P1_OBJ = PWMOutputDevice(WHEEL_FR_P1, pin_factory=PWM_PIN_FACTORY)
     WHEEL_FR_P2_OBJ = PWMOutputDevice(WHEEL_FR_P2, pin_factory=PWM_PIN_FACTORY)
@@ -71,7 +101,7 @@ if platform.platform()[:5].lower() == "linux":
     WHEEL_BL_P1_OBJ = PWMOutputDevice(WHEEL_BL_P1, pin_factory=PWM_PIN_FACTORY)
     WHEEL_BL_P2_OBJ = PWMOutputDevice(WHEEL_BL_P2, pin_factory=PWM_PIN_FACTORY)
 
-    atexit.register(lambda _: GPIO.cleanup(PIN_LIST))
+    atexit.register(lambda: GPIO.cleanup(PIN_LIST))
 
     def setSpeed(speed):
         """Speed from -100-0-100"""
@@ -107,12 +137,21 @@ if platform.platform()[:5].lower() == "linux":
         brightness = max(0, min(100, brightness))
         TAILLIGHT_OBJ.value = brightness / 100
     
+    def setSun(brightness):
+        """Brightness from 0-100"""
+        brightness = max(0, min(100, brightness))
+        SUN_OBJ.value = brightness / 100
+    
     def setSteeringAngle(angle):
         """Angle from -90(left) to 90(right), 0 in middle"""
-        angle = max(STEERING_MAX_LEFT, min(STEERING_MAX_RIGHT, angle))
-        angle += STEERING_OFFSET
-        SERVO_FR_OBJ.value = angle / 90
-        SERVO_FL_OBJ.value = angle / 90
+        SERVO_FR_OBJ.value = SERVO_FR_COMP(angle)
+        SERVO_FL_OBJ.value = SERVO_FL_COMP(angle)
+    
+    def rawsetL(value):
+        SERVO_FL_OBJ.value = value / 90
+    
+    def rawsetR(value):
+        SERVO_FR_OBJ.value = value / 90
     
 elif False: # Not on raspberry pi, make tkinter UI showing stuff
     import tkinter as tk
