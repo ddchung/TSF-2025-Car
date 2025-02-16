@@ -58,27 +58,28 @@ def stop_sign():
 
 object_actions = {
 #   'object': {'threshold': percent, 'action': function}
-    'red':      {'threshold':.10,   'exclusive':True,   'disable':[],   'action': red_light},
+    'red light':      {'threshold':.10,   'exclusive':True,   'disable':[],   'action': red_light},
     'person':   {'threshold':.10,   'exclusive':True,   'disable':[(0,0,.3,1), (.7,0,1,1)], 'action': red_light},
     'stop':     {'threshold':.15,   'exclusive':True,   'disable':[],   'action': stop_sign},
-    'green':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: None},
-    'speed 10': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(8.3)},
-    'speed 20': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(16.7)},
-    'speed 30': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(25)},
-    'speed 40': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(33.3)},
-    'speed 50': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(41.7)},
-    'speed 60': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(50)},
-    'speed 70': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(58.3)},
-    'speed 80': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(66.7)},
-    'speed 90': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(75)},
-    'speed 100':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(83.3)},
-    'speed 110':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(91.7)},
-    'speed 120':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(100)},
+    'green light':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: None},
+    'speed limit 10': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(8.3)},
+    'speed limit 20': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(16.7)},
+    'speed limit 30': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(25)},
+    'speed limit 40': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(33.3)},
+    'speed limit 50': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(41.7)},
+    'speed limit 60': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(50)},
+    'speed limit 70': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(58.3)},
+    'speed limit 80': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(66.7)},
+    'speed limit 90': {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(75)},
+    'speed limit 100':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(83.3)},
+    'speed limit 110':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(91.7)},
+    'speed limit 120':    {'threshold':.10,   'exclusive':False,  'disable':[],   'action': lambda: speed.set(100)},
 }
 
 def action(object):
     # object = (name, x, y, w, h)
     name, x, y, w, h = object
+    name = name.lower()
     x1, y1, x2, y2 = x, y, x+w, y+h
     try:
         action = object_actions[name]
@@ -101,25 +102,30 @@ def action(object):
 
 object_priority = [
     'person',
-    'red',
+    'red light',
     'stop',
-    'green',
-    'speed 10',
-    'speed 20',
-    'speed 30',
-    'speed 40',
-    'speed 50',
-    'speed 60',
-    'speed 70',
-    'speed 80',
-    'speed 90',
-    'speed 100',
-    'speed 110',
-    'speed 120',
+    'green light',
+    'speed limit 10',
+    'speed limit 20',
+    'speed limit 30',
+    'speed limit 40',
+    'speed limit 50',
+    'speed limit 60',
+    'speed limit 70',
+    'speed limit 80',
+    'speed limit 90',
+    'speed limit 100',
+    'speed limit 110',
+    'speed limit 120',
 ]
 
 def sort_objects(objects):
-    objects = sorted(objects, key=lambda x: object_priority.index(x[0]))
+    def sort_predicate(x):
+        try:
+            return object_priority.index(x[0].lower())
+        except ValueError:
+            return len(object_priority)
+    objects = sorted(objects, key=sort_predicate)
     return objects
 
 # predictor threads
@@ -140,7 +146,7 @@ def predict_objects():
             h = int(h)
             x -= w // 2
             y -= h // 2
-            name = object.names[int(box.cls)]
+            name = object.names[int(box.cls)].lower()
             detected.append((name, x, y, w, h))
     for person in people:
         for box in person.boxes:
@@ -217,9 +223,13 @@ def print_summary():
 
     for object, idx in zip(objects, range(len(objects))):
         name, x, y, w, h = object
+        name = name.lower()
         if idx == 0:
             print("\033[7m", end="")
-        print(f"| {name:<15} | {x:<4} | {y:<4} | {w:<4} | {h:<4} | {object_priority.index(name):<15} |")
+        try:
+            print(f"| {name:<15} | {x:<4} | {y:<4} | {w:<4} | {h:<4} | {object_priority.index(name):<15} |")
+        except ValueError:
+            print(f"| {name:<15} | {x:<4} | {y:<4} | {w:<4} | {h:<4} | {'err':<15} |")
         if idx == 0:
             print("\033[27m", end="")
     print("+---------------------------------------------------------------+")
