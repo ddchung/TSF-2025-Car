@@ -114,7 +114,7 @@ if platform.platform()[:5].lower() == "linux":
         SERVO_FR_OBJ.value = angle / 90
         SERVO_FL_OBJ.value = angle / 90
     
-else: # Not on raspberry pi, make tkinter UI showing stuff
+elif False: # Not on raspberry pi, make tkinter UI showing stuff
     import tkinter as tk
     import math
 
@@ -145,7 +145,7 @@ else: # Not on raspberry pi, make tkinter UI showing stuff
         y = 400 - y
         canvas.create_rectangle(0, 0, 400, 400, fill="white")
         canvas.create_line(200, 400, x, y, fill="red", width=4)
-        root.update()
+        root.update_idletasks()
 
     def setSpeed(s):
         global speed
@@ -164,4 +164,13 @@ else: # Not on raspberry pi, make tkinter UI showing stuff
         global steering_angle
         steering_angle = angle
         drawLine(steering_angle, speed)
+else:
+    def setSpeed(speed):
+        pass
+    def setHeadlights(brightness):
+        pass
+    def setTaillights(brightness):
+        pass
+    def setSteeringAngle(angle):
+        pass
     
