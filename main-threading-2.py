@@ -238,6 +238,13 @@ def print_summary():
     print("+---------------------------------------------------------------+")
     print("\033[2J\033[H", end="")
 
+def brightness(frame):
+    gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    average_light_level = int(np.mean(gray_image))
+    if average_light_level < 80:
+        rc_car_api.set_light(3, 70)
+    return average_light_level
+
 def main():
     cap = cv2.VideoCapture(0)
     cap.set(3, CAM_WIDTH)
