@@ -170,6 +170,9 @@ elif False: # Not on raspberry pi, make tkinter UI showing stuff
     taillights = tk.Label(root, text="Taillights: 0")
     taillights.pack()
 
+    sun = tk.Label(root, text="Sun: 0")
+    sun.pack()
+
     root.update()
 
     steering_angle = 0
@@ -203,6 +206,9 @@ elif False: # Not on raspberry pi, make tkinter UI showing stuff
         global steering_angle
         steering_angle = angle
         drawLine(steering_angle, speed)
+    def setSun(brightness):
+        sun.config(text=f"Sun: {brightness}")
+        root.update_idletasks()
 else:
     def setSpeed(speed):
         pass
@@ -211,5 +217,7 @@ else:
     def setTaillights(brightness):
         pass
     def setSteeringAngle(angle):
+        pass
+    def setSun(brightness):
         pass
     
