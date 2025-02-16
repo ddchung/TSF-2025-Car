@@ -1,10 +1,11 @@
 import cv2
-import numpy as np
 import sys
 import rc_car_api
-import pins
 
-num = sys.argv[1]
+if len(sys.argv) > 1:
+	num = sys.argv[1]
+else:
+	num = 0
 num = int(num)
 
 cap = cv2.VideoCapture(num)
@@ -13,7 +14,7 @@ cap.set(3,480)
 cap.set(4,240)
 
 angle = 0
-
+speed = 0
 while True:
 	ok, img = cap.read()
 	if not ok:
@@ -24,24 +25,33 @@ while True:
 	if c == ord('q'):
 		break
 	if c == ord('w'):
-		rc_car_api.moveForward(1, time=0.5)
+		speed += 10
+		if speed > 100:
+			speed = 100
+		rc_car_api.start_move_forward(speed)
 	if c == ord('s'):
-		rc_car_api.moveBackward(1, time=0.5)
+		speed -= 10
+		if speed < -100:
+			speed = -100
+		rc_car_api.start_move_backward(-speed)
 	if c == ord('a'):
-		rc_car_api.setSteeringAngle(-35)
-	if c == ord('r'):
-		rc_car_api.setSteeringAngle(0)
+		angle -= 10
+		rc_car_api.set_steering_angle(angle)
 	if c == ord('d'):
-		rc_car_api.setSteeringAngle(40)
+		angle += 10
+		rc_car_api.set_steering_angle(angle)
+	if c == ord(' '):
+		speed = 0
+		angle = 0
+		rc_car_api.set_steering_angle(angle)
+		rc_car_api.stop_move()
 	if c == ord('h'):
-		pins.setHeadlights(True)
+		rc_car_api.set_light(0, 100)
 	if c == ord('t'):
-		pins.setTaillights(True)
+		rc_car_api.set_light(1, 100)
+	if c == ord('x'):
+		rc_car_api.set_light(3, 100)
 	if c == ord('n'):
-		pins.setHeadlights(False)
-		pins.setTaillights(False)
-
-
-#rc_car_api.moveForward(1, time=1)
-#rc_car_api.moveBackward(1, time=1)
-#rc_car_api.setSteeringAngle(-90 0 90)
+		rc_car_api.set_light(0, 0)
+		rc_car_api.set_light(1, 0)
+		rc_car_api.set_light(3, 0)
