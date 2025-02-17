@@ -3,9 +3,11 @@
 import cv2
 import socket
 import pickle
+import numpy as np
 
-PORT = 5824
+PORT = 5829
 SERVER = "tins-pi.local"
+# SERVER = "127.0.0.1"
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((SERVER, PORT))
@@ -23,6 +25,7 @@ def recv():
         if not data:
             return None
         frame = pickle.loads(data)
+        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
         return frame
     return None
 

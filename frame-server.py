@@ -21,12 +21,13 @@ while True:
 
     while True:
         ret, frame = cap.read()
-        data = pickle.dumps(frame)
+        data = cv2.imencode('.jpg', frame)[1]
+        data = pickle.dumps(data)
         try:
             conn.sendall(b"RCIM")
             conn.sendall(len(data).to_bytes(4, byteorder='big'))
             conn.sendall(data)
-        except ConnectionResetError:
+        except:
             break
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
