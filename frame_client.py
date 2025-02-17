@@ -4,17 +4,35 @@ import cv2
 import socket
 import pickle
 import numpy as np
+import threading
+import time
 
 PORT = 5829
 SERVER = "tins-pi.local"
 # SERVER = "127.0.0.1"
+
+# Wrapper class to automatically lock/unlock
+class SyncedVariable:
+    def __init__(self, value):
+        self._value = value
+        self._lock = threading.Lock()
+
+    def get(self):
+        with self._lock:
+            return self._value
+
+    def set(self, value):
+        with self._lock:
+            self._value = value
+
+frame = SyncedVariable(None)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((SERVER, PORT))
 
 print(f"Connected to {SERVER}:{PORT}")
 
-def recv():
+def _recv():
     data = client.recv(4)
     if data == b"RCIM":
         data = client.recv(4)
@@ -28,6 +46,19 @@ def recv():
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
         return frame
     return None
+
+def recv():
+    global frame
+    return frame.get()
+
+def recv_thread():
+    global frame
+    while True:
+        frame.set(_recv())
+
+threading.Thread(target=recv_thread, daemon=True).start()
+
+time.sleep(1) # allow time for the first frame to be received
 
 if __name__ == "__main__":
     while True:
