@@ -7,7 +7,7 @@ import numpy as np
 import threading
 import time
 
-PORT = 5829
+PORT = 5824
 SERVER = "tins-pi.local"
 # SERVER = "127.0.0.1"
 
@@ -25,7 +25,7 @@ class SyncedVariable:
         with self._lock:
             self._value = value
 
-frame = SyncedVariable(None)
+_frame = SyncedVariable(None)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((SERVER, PORT))
@@ -48,17 +48,17 @@ def _recv():
     return None
 
 def recv():
-    global frame
-    return frame.get()
+    global _frame
+    return _frame.get()
 
 def recv_thread():
-    global frame
+    global _frame
     while True:
-        frame.set(_recv())
+        _frame.set(_recv())
 
 threading.Thread(target=recv_thread, daemon=True).start()
 
-time.sleep(1) # allow time for the first frame to be received
+time.sleep(2) # allow time for the first frame to be received
 
 if __name__ == "__main__":
     while True:
