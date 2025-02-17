@@ -6,10 +6,17 @@ import pickle
 import numpy as np
 import threading
 import time
+import os
 
 PORT = 5824
-SERVER = "tins-pi.local"
-# SERVER = "127.0.0.1"
+
+if os.environ.get("RC_CAR_PI_ADDR") is None:
+    SERVER = "localhost"
+    def _server_thread():
+        import frame_server
+    threading.Thread(target=_server_thread, daemon=True).start()
+else:
+    SERVER = os.environ.get("RC_CAR_PI_ADDR")
 
 # Wrapper class to automatically lock/unlock
 class SyncedVariable:

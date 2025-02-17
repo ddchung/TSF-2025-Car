@@ -1,10 +1,8 @@
 import platform
 import os
 
-HOST = "tins-pi.local"
-
 # Crude raspberry pi detection
-if True:
+if os.environ.get("RC_CAR_PI_ADDR"):
     from gpiozero.pins.pigpio import PiGPIOFactory
     from gpiozero import Servo
     from gpiozero import PWMOutputDevice
@@ -15,7 +13,8 @@ if True:
     # 0  0  Stop
 
     # PWM factory
-    PWM_PIN_FACTORY = PiGPIOFactory(host=HOST)
+    host = os.environ.get("RC_CAR_PI_ADDR")
+    PWM_PIN_FACTORY = PiGPIOFactory(host=host)
 
     # Front right
 
