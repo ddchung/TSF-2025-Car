@@ -1,19 +1,14 @@
 # Model prediction from webcam
 
 import cv2
-from tensorflow import keras
+import tensorflow as tf
 import numpy as np
 import rc_car_api
+import frame_client
+from white_balance import automatic_white_balance
 
-# Load the model
-model = keras.models.load_model("lane_navigation_final.keras")
-
-cap = cv2.VideoCapture(0)
-cap.set(3, 480)
-cap.set(4, 240)
-
-def img_preprocess(image):
-    print("preprocess", flush=True)
+steering_model = tf.keras.models.load_model("lane_navigation_final.keras")
+def predict_steering(image):
     height, _ = image.shape[:2]
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_green = (50, 40, 40)
@@ -26,23 +21,19 @@ def img_preprocess(image):
     image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.resize(image, (200, 66))
     image = image / 255
-    print("image shape", image.shape, flush=True)
-    return image
+    cv2.imshow("processed", image)
+    image = np.asarray([image])
+    steering = steering_model.predict(image, verbose = 0)
+    return steering - 90
 
 while True:
-    ret, frame = cap.read()
-    if not ret:
+    frame = frame_client.recv()
+    frame = automatic_white_balance(frame)
+    if frame is None:
         break
-    # frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
     img2 = frame.copy()
-    frame = img_preprocess(frame)
-    frame = np.asarray([frame])
-    steering_angle = model.predict(frame)
-
-    # draw predicted angle
-
-    # -90 to 90
-    angle = steering_angle[0][0] - 90
+    angle = predict_steering(frame)
 
     h, w = img2.shape[:2]
     x1 = int(w/2)
@@ -66,5 +57,4 @@ while True:
     if key == ord(' '):
         rc_car_api.stop_move()
 
-cap.release()
 cv2.destroyAllWindows()
