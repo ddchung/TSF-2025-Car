@@ -1,12 +1,13 @@
 import platform
+import os
+
+HOST = "tins-pi.local"
 
 # Crude raspberry pi detection
-if "linux" in platform.platform().lower():
-    import RPi.GPIO as GPIO
+if True:
     from gpiozero.pins.pigpio import PiGPIOFactory
     from gpiozero import Servo
     from gpiozero import PWMOutputDevice
-    import atexit
 
     # P1 P2
     # 1  0  Forward
@@ -14,7 +15,7 @@ if "linux" in platform.platform().lower():
     # 0  0  Stop
 
     # PWM factory
-    PWM_PIN_FACTORY = PiGPIOFactory()
+    PWM_PIN_FACTORY = PiGPIOFactory(host=HOST)
 
     # Front right
 
@@ -81,10 +82,6 @@ if "linux" in platform.platform().lower():
 
     PIN_LIST = [SERVO_FR_P, SERVO_FL_P, WHEEL_FL_P1, WHEEL_FL_P2, WHEEL_FR_P1, WHEEL_FR_P2, WHEEL_BL_P1, WHEEL_BL_P2, WHEEL_BR_P1, WHEEL_BR_P2, HEADLIGHTS, TAILLIGHTS, SUN]
 
-    GPIO.setmode(GPIO.BCM)
-
-    GPIO.setup(PIN_LIST, GPIO.OUT, initial=GPIO.LOW)
-
     SERVO_FR_OBJ = Servo(SERVO_FR_P, pin_factory=PWM_PIN_FACTORY)
     SERVO_FL_OBJ = Servo(SERVO_FL_P, pin_factory=PWM_PIN_FACTORY)
 
@@ -100,8 +97,6 @@ if "linux" in platform.platform().lower():
     WHEEL_BR_P2_OBJ = PWMOutputDevice(WHEEL_BR_P2, pin_factory=PWM_PIN_FACTORY)
     WHEEL_BL_P1_OBJ = PWMOutputDevice(WHEEL_BL_P1, pin_factory=PWM_PIN_FACTORY)
     WHEEL_BL_P2_OBJ = PWMOutputDevice(WHEEL_BL_P2, pin_factory=PWM_PIN_FACTORY)
-
-    atexit.register(lambda: GPIO.cleanup(PIN_LIST))
 
     def setSpeed(speed):
         """Speed from -100-0-100"""
