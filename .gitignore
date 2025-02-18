@@ -12,6 +12,9 @@ bin/
 include/python3.11/
 share/
 
+# Mac
+.DS_Store
+
 # Distribution / packaging
 .Python
 build/
