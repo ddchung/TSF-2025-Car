@@ -46,7 +46,7 @@ if os.environ.get("RC_CAR_PI_ADDR"):
         return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
     def SERVO_FL_COMP(angle):
-        angle = int(angle)
+        angle = int(angle) - 1
         if angle == 0:
             return -10 / 90
         if angle > 0:
@@ -60,7 +60,7 @@ if os.environ.get("RC_CAR_PI_ADDR"):
         assert False
     
     def SERVO_FR_COMP(angle):
-        angle = int(angle)
+        angle = int(angle) - 1
         if angle == 0:
             return -2 / 90
         if angle > 0:
