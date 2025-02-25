@@ -20,7 +20,7 @@ def defish(frame):
     dtype = 'linear'
     format = 'fullframe'
     fov = 190
-    new_fov = 120
+    new_fov = 145
     return defisheye.Defisheye(frame, dtype=dtype, format=format, fov=fov, pfov=new_fov).convert()
 
 def correct(frame):
