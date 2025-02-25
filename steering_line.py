@@ -30,7 +30,8 @@ def draw_steering_curve(image, steering_angle, length=None):
     #     y2 = y2 // 2 + height // 2
     #     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 5)
 
-    CALIBRATION = 1.6
+    # CALIBRATION = 1.6
+    CALIBRATION = 1
 
     steering_angle *= CALIBRATION
 
