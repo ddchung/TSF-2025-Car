@@ -29,8 +29,5 @@ while True:
             conn.sendall(data)
         except:
             break
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
     conn.close()
 
