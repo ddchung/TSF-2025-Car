@@ -42,3 +42,4 @@ ultralytics-thop==2.0.13
 urllib3==2.3.0
 gpiozero==2.0.1
 pigpio==1.78
+defisheye==1.4.1

@@ -26,16 +26,19 @@ def defish(frame):
 def correct(frame):
     frame = crop_frame(frame, 0, 0.29, 0.15, 0)
     frame = defish(frame)
-    frame = scipy.ndimage.rotate(frame, 6, reshape=True)
-    frame = crop_frame(frame, 0.1, 0.1, 0.2, 0.1)
     return frame
 
 if __name__ == "__main__":
     import white_balance
-    import frame_client
-    img = cv2.imread("/Users/tin/fisheye_lanes.png")
-    img = defish(img)
-    img = white_balance.automatic_white_balance(img)
-    cv2.imshow("frame", img)
-    cv2.waitKey(0)
-    
+    video = cv2.VideoCapture('/home/tin/Downloads/Screen Recording 2025-02-25 at 8.04.05 AM.mov')
+    while True:
+        for _ in range(10):
+            video.read()
+        ok, frame = video.read()
+        if not ok:
+            break
+        frame = correct(frame)
+        frame = white_balance.automatic_white_balance(frame)
+        cv2.imshow("frame", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
