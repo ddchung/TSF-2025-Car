@@ -8,7 +8,7 @@ import frame_client
 from white_balance import automatic_white_balance
 import correct_fov
 
-steering_model = tf.keras.models.load_model("lane_navigation_final.keras")
+steering_model = tf.keras.models.load_model("lane_nav_output/lane_nav_model_final.keras")
 def predict_steering(image):
     height, _ = image.shape[:2]
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -29,7 +29,7 @@ def predict_steering(image):
     # cv2.imshow("processed", image)
     image = np.asarray([image])
     steering = steering_model.predict(image, verbose = 0)
-    return steering - 90
+    return (steering - 90) 
 
 while True:
     frame = frame_client.recv()
@@ -63,7 +63,7 @@ while True:
     if key == ord('q'):
         break
     if key == ord('w'):
-        rc_car_api.start_move_forward(30)
+        rc_car_api.start_move_forward(40)
     if key == ord('s'):
         rc_car_api.start_move_backward(50)
     if key == ord(' '):
