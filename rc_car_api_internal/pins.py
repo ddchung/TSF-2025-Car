@@ -2,7 +2,7 @@ import platform
 import os
 
 # Crude raspberry pi detection
-if os.environ.get("RC_CAR_PI_ADDR"):
+if os.environ.get("RC_CAR_PI_ADDR") or "linux" in platform.system().lower():
     from gpiozero.pins.pigpio import PiGPIOFactory
     from gpiozero import Servo
     from gpiozero import PWMOutputDevice
@@ -64,13 +64,13 @@ if os.environ.get("RC_CAR_PI_ADDR"):
         if angle == 0:
             return -2 / 90
         if angle > 0:
-            if angle > 30:
-                angle = 30
-            return MAP_RANGE(angle, 0, 30, -2, 45) / 90
+            if angle > 45:
+                angle = 45
+            return MAP_RANGE(angle, 0, 45, -2, 90) / 90
         if angle < 0:
-            if angle < -45:
-                angle = -45
-            return MAP_RANGE(angle, 0, -45, -2, -90) / 90
+            if angle < -30:
+                angle = -30
+            return MAP_RANGE(angle, 0, -30, -2, -45) / 90
         assert False
     
     # Lights
