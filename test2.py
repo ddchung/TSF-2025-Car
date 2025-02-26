@@ -12,7 +12,7 @@ import platform
 
 # steering_model = tf.keras.models.load_model("lane_nav_output/lane_nav_model_final.keras")
 try:
-    steering_model = tflite.Interpreter(model_path="lane_nav.tflite", experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
+    steering_model = tflite.Interpreter(model_path="lane_nav_edgetpu.tflite", experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
 except:
     steering_model = tflite.Interpreter(model_path="lane_nav.tflite")
 steering_model.allocate_tensors()
