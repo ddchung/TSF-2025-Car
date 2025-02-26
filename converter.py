@@ -10,7 +10,7 @@ IMG_CHANNELS = 1
 image_paths = glob.glob("lane_nav_data/*.jpg")
 
 def dataset():
-  for img in image_paths[:100]:
+  for img in image_paths:
     img = cv2.imread(img, cv2.IMREAD_GRAYSCALE)  # Read in grayscale
     img = cv2.resize(img, IMG_SIZE)  # Resize to model input size
     img = np.expand_dims(img, axis=-1)  # Add channel dimension (H, W, 1)
@@ -18,7 +18,7 @@ def dataset():
     img = img.astype(np.float32) / 255.0  # Normalize (if needed)
     yield [img]
 
-model = keras.models.load_model("lane_nav_output/nvidia_model.keras", compile=False)
+model = keras.models.load_model("lane_nav_output/lane_nav_model_final.keras", compile=False)
 model.export("test")
 
 converter = tf.lite.TFLiteConverter.from_saved_model("test")
@@ -31,5 +31,5 @@ converter.inference_input_type = tf.uint8
 converter.inference_output_type = tf.uint8
 tflite_model = converter.convert()
 
-with open("nvidia_model.tflite", "wb") as f:
+with open("lane_nav.tflite", "wb") as f:
   f.write(tflite_model)
