@@ -18,7 +18,7 @@ def dataset():
     img = img.astype(np.float32) / 255.0  # Normalize (if needed)
     yield [img]
 
-model = keras.models.load_model("lane_nav_output/lane_nav_model_final.keras", compile=False)
+model = keras.models.load_model("lane_nav_model_final.keras", compile=False)
 model.export("test")
 
 converter = tf.lite.TFLiteConverter.from_saved_model("test")
