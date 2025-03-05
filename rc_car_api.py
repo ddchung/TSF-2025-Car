@@ -37,8 +37,5 @@ def read_sensor(sensor):
     sensors:
     - 0 front
     - 1 back
-    - 2 left
-    - 3 right
     """
-    print("\nWARN: Sensors not implemented yet\n")
     return 15 # cm
