@@ -9,7 +9,7 @@ import correct_fov
 import os
 import sys
 
-SHOULD_SAVE = False
+SHOULD_SAVE = True
 DIR = "lane_nav_data"
 if SHOULD_SAVE:
     if not os.path.exists(DIR):
@@ -51,7 +51,10 @@ def predict_steering(image):
     image = cv2.resize(image, (200, 66))
     # cv2.imshow("resized", image)
     image = image / 255
-    black_and_white = image.copy()
+    black_and_white = mask.copy()
+    # crop out top half
+    black_and_white = black_and_white[int(height/2):, :]
+    black_and_white = cv2.resize(black_and_white, (200, 66))
     image = np.asarray([image])
     steering = steering_model.predict(image, verbose = 0)
     if SHOULD_SAVE:

@@ -8,7 +8,7 @@ import white_balance
 import os
 
 # Videos
-video_files = glob.glob('/home/tin/Downloads/Screen Recording 2025-02-25 at 8.0*.mov')
+video_files = glob.glob('/Users/tin/Desktop/Screen Recording 2025-03*.mov')
 OUTPUT_DIR = 'lane_nav_data/'
 
 print(f"Videos: {video_files}")
