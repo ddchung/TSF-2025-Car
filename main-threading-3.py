@@ -13,6 +13,8 @@ from collections import defaultdict
 from typing import Any, Callable
 import sys
 import os
+import white_balance
+import correct_fov
 
 # state structure
 @dataclass
@@ -34,7 +36,7 @@ state = [
         distance_sensors=[0, 0, 0, 0],
         objects=[],
         steering=0,
-        speed=0,
+        speed=1,
         speed_limit=40,
         lights=[0, 0, 0]
     )
@@ -101,7 +103,7 @@ def example_action():
 
 def check_speed_limit():
     # checks for any `speed limit %d`
-    THRESHOLD = 0.05 # 5%
+    THRESHOLD = 0.01 # 1%
 
     global state
     global state_lock
@@ -175,7 +177,7 @@ def check_distance_sensors():
         raise StopIteration
 
 def check_red_light():
-    THRESHOLD = 0.05 # 5%
+    THRESHOLD = 0.01 # 1%
 
     global state
     global state_lock
@@ -203,8 +205,8 @@ def check_red_light():
     raise StopIteration
 
 def check_person():
-    THRESHOLD = 0.1 # 10%
-    MAX_DISTANCE = 0.2 # max 20% radius, otherwise ignore
+    THRESHOLD = 0.05 # 5%
+    MAX_DISTANCE = 0.5 # max 20% radius, otherwise ignore
 
     global state
     global state_lock
@@ -239,7 +241,7 @@ def check_person():
 last_stop_sign_stop = -1
 last_stop_sign_go = 0
 def check_stop_sign():
-    THRESHOLD = 0.15 # 15%
+    THRESHOLD = 0.05 # 5%
     STOP_TIME = 3 # 3 seconds
     GET_OUT_TIME = 5 # 5 seconds
 
@@ -290,7 +292,7 @@ def check_stop_sign():
             raise StopIteration
 
 def check_green_light():
-    THRESHOLD = 0.05 # 5%
+    THRESHOLD = 0.01 # 1%
 
     global state
     global state_lock
@@ -316,6 +318,14 @@ def check_green_light():
         print("Green light detected, going")
         state[0].speed = 1
 
+def go():
+    global state
+    global state_lock
+
+    with state_lock:
+        if (state[0].speed == 0):
+            state[0].speed = 1
+
 # note: top ones have higher priority
 actions = [
     check_speed_limit,
@@ -324,7 +334,8 @@ actions = [
     check_red_light,
     check_person,
     check_stop_sign,
-    check_green_light
+    check_green_light,
+    go
 ]
 
 # Input loops
@@ -336,14 +347,17 @@ def frame_loop():
 
     cap = cv2.VideoCapture(0)
     while True:
-        # frame = frame_client.recv()
-        ok, frame = cap.read()
-        # if frame is None:
-        #     log("WARN: No frame")
-        #     continue
-        if not ok:
-            print("WARN: no frame")
+        frame = frame_client.recv()
+        # ok, frame = cap.read()
+        if frame is None:
+            print("WARN: No frame")
             continue
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        frame = white_balance.automatic_white_balance(frame)
+        frame = correct_fov.correct(frame)
+        # if not ok:
+        #     print("WARN: no frame")
+        #     continue
         with state_lock:
             state[0].frame = frame
         time.sleep(0.01)
@@ -367,11 +381,9 @@ def object_loop():
     global state_lock
 
     while True:
-        print("predicting")
         with state_lock:
             frame_ = state[0].frame
-        print("got frame, shape:", frame_.shape)
-        objects = traffic_sign_model.predict(frame_, conf=0.6, verbose = False)
+        objects = traffic_sign_model.predict(frame_, conf=0.3, verbose = False)
         people = person_model.predict(frame_, conf=0.2, classes=[0], verbose = False) # chose a much lower value since lego people don't look that similar to people
         detected = []
         for object in objects:
@@ -395,12 +407,8 @@ def object_loop():
                 x -= w // 2
                 y -= h // 2
                 detected.append(('person', x, y, w, h))
-        
-        print("detected", detected)
-        print("writing")
         with state_lock:
             state[0].objects = detected
-        print("done")
 
 # steering
 steering_model = tf.keras.models.load_model('lane_nav_model_final.keras')
@@ -425,8 +433,11 @@ def steering_loop():
         image = image / 255
         image = np.asarray([image])
         steering = steering_model.predict(image, verbose = 0)
+        steering -= 90
+        if abs(steering) > 20:
+            steering *= 1.5
         with state_lock:
-            state[0].steering =  (steering - 90) * 1.5
+            state[0].steering = int(steering)
 
 def main_loop():
     global state
@@ -450,7 +461,6 @@ def main_loop():
             current_state = state[0]
         do_actions(actions)
         update_car()
-        print(current_state.objects)
         annotated = current_state.frame.copy()
         objects = current_state.objects
 
