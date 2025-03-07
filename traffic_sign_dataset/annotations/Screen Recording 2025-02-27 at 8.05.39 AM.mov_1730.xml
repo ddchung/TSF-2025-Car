@@ -1,0 +1,26 @@
+<annotation verified="yes">
+	<folder>traffic_sign_frames</folder>
+	<filename>Screen Recording 2025-02-27 at 8.05.39 AM.mov_1730.jpg</filename>
+	<path>/home/tin/TSF-2025-Car/traffic_sign_frames/Screen Recording 2025-02-27 at 8.05.39 AM.mov_1730.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>408</width>
+		<height>408</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>green</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>266</xmin>
+			<ymin>105</ymin>
+			<xmax>297</xmax>
+			<ymax>147</ymax>
+		</bndbox>
+	</object>
+</annotation>
