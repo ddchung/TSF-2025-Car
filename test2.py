@@ -2,20 +2,38 @@
 
 import cv2
 import tensorflow as tf
-import tflite_runtime.interpreter as tflite
 import numpy as np
 import rc_car_api
-import frame_client
 from white_balance import automatic_white_balance
 import correct_fov
-import platform
+import os
+import sys
 
-# steering_model = tf.keras.models.load_model("lane_nav_output/lane_nav_model_final.keras")
-try:
-    steering_model = tflite.Interpreter(model_path="lane_nav_edgetpu.tflite", experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
-except:
-    steering_model = tflite.Interpreter(model_path="lane_nav.tflite")
-steering_model.allocate_tensors()
+SHOULD_SAVE = True
+DIR = "lane_nav_data"
+if SHOULD_SAVE:
+    if not os.path.exists(DIR):
+        os.mkdir(DIR)
+
+file = None
+
+if len(sys.argv) > 1:
+    file = sys.argv[1]
+    try:
+        file = int(file)
+    except:
+        pass
+
+if file is None:
+    import frame_client
+
+def save(frame, angle):
+    global DIR
+    num = len(os.listdir(DIR))
+    cv2.imwrite(f"{DIR}/ai_frame_{angle}_{num}.jpg", frame)
+    print(f"Saved {DIR}/ai_frame_{angle}_{num}.jpg")
+
+steering_model = tf.keras.models.load_model("lane_nav_model_final.keras")
 def predict_steering(image):
     height, _ = image.shape[:2]
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -30,40 +48,44 @@ def predict_steering(image):
     image = white[int(height/2):, :]
     image = cv2.GaussianBlur(image, (3, 3), 0)
     # cv2.imshow("cropped", image)
-    image = cv2.resize(image, (66, 200))
-    image = np.expand_dims(image, axis=(-1))
+    image = cv2.resize(image, (200, 66))
     # cv2.imshow("resized", image)
-    # image = image / 255
-    # cv2.imshow("processed", image)
+    image = image / 255
+    black_and_white = mask.copy()
+    # crop out top half
+    black_and_white = black_and_white[int(height/2):, :]
+    black_and_white = cv2.resize(black_and_white, (200, 66))
     image = np.asarray([image])
-    # steering = steering_model.predict(image, verbose = 0)
-    input_details = steering_model.get_input_details()
-    output_details = steering_model.get_output_details()
-    steering_model.set_tensor(input_details[0]['index'], image)
-    steering_model.invoke()
-    steering = steering_model.get_tensor(output_details[0]['index'])
-    steering = steering[0][0]
-    return (steering - 90) 
+    steering = steering_model.predict(image, verbose = 0)
+    if SHOULD_SAVE:
+        save(black_and_white, int(steering))
+    cv2.imshow("black and white", black_and_white)
+    steering -= 90
+    if abs(steering) > 20:
+        steering *= 1#.5
+    return int(steering)
+
+if file is not None:
+    cap = cv2.VideoCapture(file)
 
 while True:
-    frame = frame_client.recv()
-    # frame = cv2.imread("/Users/tin/Desktop/fisheye.png")
-    # frame = correct_fov.correct(frame)
-    frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    # # crop out bottom part
-    # h, w = frame.shape[:2]
-    # frame = frame[:int(h*0.7), :]
+    if file is None:
+        frame = frame_client.recv()
+        if frame is None:
+            break
+    else:
+        ok, frame = cap.read()
+        if not ok:
+            break
     frame = correct_fov.correct(frame)
     frame = automatic_white_balance(frame)
-    if frame is None:
-        break
 
     img2 = frame.copy()
     angle = predict_steering(frame)
 
     h, w = img2.shape[:2]
     x1 = int(w/2)
-    y1 = h
+    y1 = int(h)
     x2 = int(x1 + h/2 * np.tan(np.radians(angle)))
     y2 = int(h/2)
 
@@ -77,7 +99,7 @@ while True:
     if key == ord('q'):
         break
     if key == ord('w'):
-        rc_car_api.start_move_forward(40)
+        rc_car_api.start_move_forward(30)
     if key == ord('s'):
         rc_car_api.start_move_backward(50)
     if key == ord(' '):

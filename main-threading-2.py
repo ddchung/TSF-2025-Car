@@ -160,34 +160,34 @@ def predict_objects():
             detected.append(('person', x, y, w, h))
     detected_objects.set(detected)
 
-steering_model = tf.keras.models.load_model("lane_navigation_final.keras")
+steering_model = tf.keras.models.load_model("lane_nav_model_final.keras")
 def predict_steering():
+    global steering_angle
     image = frame.get()
     height, _ = image.shape[:2]
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_green = (50, 40, 40)
-    upper_green = (85, 255, 255)
+    upper_green = (100, 255, 230)
     mask = cv2.inRange(hsv, lower_green, upper_green)
     white = 255 * np.ones_like(image)
     white = cv2.bitwise_and(white, white, mask=mask)
     white = cv2.cvtColor(white, cv2.COLOR_BGR2GRAY)
-    image = white[int(height/4):, :]
+    image = white[int(height/2):, :]
     image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.resize(image, (200, 66))
     image = image / 255
     image = np.asarray([image])
     steering = steering_model.predict(image, verbose = 0)
-    steering_angle.set(int(steering[0][0] - 90))
+    steering = int(steering - 90 )* 1.5
+    steering_angle.set(steering)
 
 def predict_objects_loop():
     while True:
         predict_objects()
-        time.sleep(0.1)
 
 def predict_steering_loop():
     while True:
         predict_steering()
-        time.sleep(0.1)
 
 # Common variables
 speed = SyncedVariable(30)

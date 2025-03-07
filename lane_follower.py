@@ -5,7 +5,7 @@ import math
 REG_OF_INT = 4/10
 
 LOWER_GREEN_HSV = 50
-UPPER_GREEN_HSV = 85
+UPPER_GREEN_HSV = 100
 
 SHOW_FRAME = False
 SHOW_HSV = False
@@ -20,7 +20,7 @@ def detect_edges(frame):
         cv2.imshow("hsv", hsv)
     # filter for green
     lower_green = (LOWER_GREEN_HSV, 40, 40)
-    upper_green = (UPPER_GREEN_HSV, 255, 255)
+    upper_green = (UPPER_GREEN_HSV, 255, 240)
     mask = cv2.inRange(hsv, lower_green, upper_green)
     if SHOW_MASKED:
         result = cv2.bitwise_and(frame, frame, mask=mask)
@@ -50,7 +50,7 @@ def detect_line_segments(cropped_edges):
     # tuning min_threshold, minLineLength, maxLineGap is a trial and error process by hand
     rho = 1  # distance precision in pixel, i.e. 1 pixel
     angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
-    min_threshold = 10  # minimal of votes
+    min_threshold = 40  # minimal of votes
     line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold, 
                                     np.array([]), minLineLength=10, maxLineGap=4)
 

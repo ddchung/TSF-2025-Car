@@ -19,8 +19,8 @@ def crop_frame(frame, top, bottom, left, right):
 def defish(frame):
     dtype = 'linear'
     format = 'fullframe'
-    fov = 190
-    new_fov = 145
+    fov = 170
+    new_fov = 120
     return defisheye.Defisheye(frame, dtype=dtype, format=format, fov=fov, pfov=new_fov).convert()
 
 def correct(frame):
