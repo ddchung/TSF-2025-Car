@@ -15,6 +15,7 @@ import sys
 import os
 import white_balance
 import correct_fov
+import traffic_sign_detection
 
 # state structure
 @dataclass
@@ -373,40 +374,14 @@ def distance_sensor_loop():
             state[0].distance_sensors = sensors
         time.sleep(0.01)
 
-# objects
-traffic_sign_model = YOLO('traffic_sign_detector.pt')
-person_model = YOLO('yolov10n.pt')
 def object_loop():
     global state
     global state_lock
 
     while True:
         with state_lock:
-            frame_ = state[0].frame
-        objects = traffic_sign_model.predict(frame_, conf=0.3, verbose = False)
-        people = person_model.predict(frame_, conf=0.2, classes=[0], verbose = False) # chose a much lower value since lego people don't look that similar to people
-        detected = []
-        for object in objects:
-            for box in object.boxes:
-                x, y, w, h = box.xywh[0]
-                x = int(x)
-                y = int(y)
-                w = int(w)
-                h = int(h)
-                x -= w // 2
-                y -= h // 2
-                name = object.names[int(box.cls)].lower()
-                detected.append((name, x, y, w, h))
-        for person in people:
-            for box in person.boxes:
-                x, y, w, h = box.xywh[0]
-                x = int(x)
-                y = int(y)
-                w = int(w)
-                h = int(h)
-                x -= w // 2
-                y -= h // 2
-                detected.append(('person', x, y, w, h))
+            frame = state[0].frame
+        detected = traffic_sign_detection.detect_objects(frame)
         with state_lock:
             state[0].objects = detected
 
