@@ -70,7 +70,7 @@ if os.environ.get("RC_CAR_PI_ADDR") or "linux" in platform.system().lower():
         if angle < 0:
             if angle < -30:
                 angle = -30
-            return MAP_RANGE(angle, 0, -30, -2, -45) / 90
+            return MAP_RANGE(angle, 0, -30, -2, -60) / 90
         assert False
     
     # Lights
