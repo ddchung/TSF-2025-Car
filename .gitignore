@@ -16,6 +16,9 @@ lib64
 # Mac
 .DS_Store
 
+# VS Code
+.vscode/
+
 # Distribution / packaging
 .Python
 build/
