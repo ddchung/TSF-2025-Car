@@ -9,7 +9,7 @@ import correct_fov
 import os
 import sys
 
-SHOULD_SAVE = True
+SHOULD_SAVE = False
 DIR = "lane_nav_data"
 if SHOULD_SAVE:
     if not os.path.exists(DIR):
@@ -45,7 +45,10 @@ def predict_steering(image):
     white = cv2.bitwise_and(white, white, mask=mask)
     white = cv2.cvtColor(white, cv2.COLOR_BGR2GRAY)
     # cv2.imshow("white", white)
-    image = white[int(height/2):, :]
+    top = int(height/2)
+    bottom = height
+    # bottom = int(height-(height/8))
+    image = white[top:bottom, :]
     image = cv2.GaussianBlur(image, (3, 3), 0)
     # cv2.imshow("cropped", image)
     image = cv2.resize(image, (200, 66))
@@ -62,7 +65,7 @@ def predict_steering(image):
     cv2.imshow("black and white", black_and_white)
     steering -= 90
     if abs(steering) > 20:
-        steering *= 1#.5
+        steering *= 1.5
     return int(steering)
 
 if file is not None:
@@ -73,6 +76,7 @@ while True:
         frame = frame_client.recv()
         if frame is None:
             break
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
     else:
         ok, frame = cap.read()
         if not ok:
@@ -89,7 +93,10 @@ while True:
     x2 = int(x1 + h/2 * np.tan(np.radians(angle)))
     y2 = int(h/2)
 
-    cv2.line(img2, (x1, y1), (x2, y2), (0, 255, 0), 5)
+    try:
+        cv2.line(img2, (x1, y1), (x2, y2), (0, 255, 0), 5)
+    except:
+        pass
 
     rc_car_api.set_steering_angle(angle)
 
@@ -99,7 +106,7 @@ while True:
     if key == ord('q'):
         break
     if key == ord('w'):
-        rc_car_api.start_move_forward(30)
+        rc_car_api.start_move_forward(50)
     if key == ord('s'):
         rc_car_api.start_move_backward(50)
     if key == ord(' '):

@@ -104,7 +104,7 @@ def example_action():
 
 def check_speed_limit():
     # checks for any `speed limit %d`
-    THRESHOLD = 0.01 # 1%
+    THRESHOLD = 0.001 # 0.1%
 
     global state
     global state_lock
@@ -140,6 +140,8 @@ def correct_speed():
     with state_lock:
         cur_speed = state[0].speed
         speed_limit = state[0].speed_limit
+        if speed_limit < 30:
+            speed_limit = 30
         if cur_speed > 0:
             state[0].speed = speed_limit
         elif cur_speed < 0:
@@ -178,7 +180,7 @@ def check_distance_sensors():
         raise StopIteration
 
 def check_red_light():
-    THRESHOLD = 0.01 # 1%
+    THRESHOLD = 0.001 # 0.1%
 
     global state
     global state_lock
@@ -206,7 +208,7 @@ def check_red_light():
     raise StopIteration
 
 def check_person():
-    THRESHOLD = 0.05 # 5%
+    THRESHOLD = 0.002 # 0.2%
     MAX_DISTANCE = 0.5 # max 20% radius, otherwise ignore
 
     global state
@@ -242,7 +244,7 @@ def check_person():
 last_stop_sign_stop = -1
 last_stop_sign_go = 0
 def check_stop_sign():
-    THRESHOLD = 0.05 # 5%
+    THRESHOLD = 0.002 # 0.2%
     STOP_TIME = 3 # 3 seconds
     GET_OUT_TIME = 5 # 5 seconds
 
@@ -264,11 +266,15 @@ def check_stop_sign():
                 and w * h > THRESHOLD * cam_height * cam_width):
             found = True
             break
-    if not found:
-        return
     
-    # stop for 3 seconds, then go
     now = time.time()
+    if not found:
+        if now - last_stop_sign_stop < STOP_TIME:
+            with state_lock:
+                state[0].speed = 0
+            raise StopIteration
+        return
+    # stop for 3 seconds, then go
     if last_stop_sign_stop < last_stop_sign_go:
         if now - last_stop_sign_go > GET_OUT_TIME:
             # give car GET_OUT_TIME seconds to get out
@@ -293,7 +299,7 @@ def check_stop_sign():
             raise StopIteration
 
 def check_green_light():
-    THRESHOLD = 0.01 # 1%
+    THRESHOLD = 0.001 # 0.1%
 
     global state
     global state_lock
@@ -346,7 +352,7 @@ def frame_loop():
     global state
     global state_lock
 
-    cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture(0)
     while True:
         frame = frame_client.recv()
         # ok, frame = cap.read()
@@ -414,20 +420,23 @@ def steering_loop():
         with state_lock:
             state[0].steering = int(steering)
 
+def car_update_loop():
+    while True:
+        update_car()
+        time.sleep(0.01)
+
 def main_loop():
     global state
     global state_lock
 
     black = np.zeros((480, 640, 3), np.uint8)
 
-    traffic_sign_model.predict(black, conf=0.6, verbose = False)
-    person_model.predict(black, conf=0.2, classes=[0], verbose = False)
-
     # start threads
     threading.Thread(target=frame_loop, daemon=True).start()
     threading.Thread(target=distance_sensor_loop, daemon=True).start()
     threading.Thread(target=object_loop, daemon=True).start()
     threading.Thread(target=steering_loop, daemon=True).start()
+    threading.Thread(target=car_update_loop, daemon=True).start()
 
     print("Started main loop")
 
@@ -435,17 +444,21 @@ def main_loop():
         with state_lock:
             current_state = state[0]
         do_actions(actions)
-        update_car()
         annotated = current_state.frame.copy()
         objects = current_state.objects
 
+        annotated_area = annotated.shape[0] * annotated.shape[1]
+
         for obj in objects:
             name, x, y, w, h = obj
+            size = w * h / annotated_area * 100
+            size = round(size, 2)
+            name = f"{name} {size}%"
             cv2.rectangle(annotated, (x, y), (x+w, y+h), (0, 255, 0), 2)
             cv2.putText(annotated, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv2.imshow('frame', annotated)
 
-        if cv2.waitKey(1) == ord('q'):
+        if cv2.waitKey(100) == ord('q'):
             break
 
 if __name__ == '__main__':

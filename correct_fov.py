@@ -19,13 +19,14 @@ def crop_frame(frame, top, bottom, left, right):
 def defish(frame):
     dtype = 'linear'
     format = 'fullframe'
-    fov = 175
-    new_fov = 137
+    # fov = 175
+    # new_fov = 137
+    fov = 190
+    new_fov = 140
     return defisheye.Defisheye(frame, dtype=dtype, format=format, fov=fov, pfov=new_fov).convert()
 
 def correct(frame):
     frame = crop_frame(frame, 0, 0.29, 0.15, 0)
-    cv2.imshow("cropped", frame)
     frame = defish(frame)
     return frame
 
