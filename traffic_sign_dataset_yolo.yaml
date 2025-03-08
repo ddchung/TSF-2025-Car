@@ -1,0 +1,20 @@
+# yolo pascal voc
+
+path: traffic_sign_frames
+train:
+  - train
+val:
+  - val
+
+names:
+  0: person
+  1: stop
+  2: green
+  3: red
+  4: speed limit 20
+  5: speed limit 30
+  6: speed limit 40
+  7: speed limit 50
+  8: speed limit 60
+  9: speed limit 70
+
