@@ -39,7 +39,6 @@ def detect_objects(frame: np.ndarray) -> list[tuple[str, int, int, int, int]]:
     # people = people_model.predict(frame, conf=0.2, classes=[0], verbose = False, device=device) # chose a much lower value since lego people don't look that similar to people
     detected = []
     for object in objects:
-        print(object.names)
         for box in object.boxes:
             x, y, w, h = box.xywh[0]
             x = int(x)
