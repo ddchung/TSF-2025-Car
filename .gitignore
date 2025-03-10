@@ -13,6 +13,9 @@ include
 share
 lib64
 
+# Ultralytics training
+runs/
+
 # Mac
 .DS_Store
 
