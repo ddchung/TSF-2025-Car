@@ -1,6 +1,7 @@
 # auto white balance
 
 import numpy as np
+import cv2
 
 def automatic_white_balance(image):
     """
@@ -28,7 +29,15 @@ def automatic_white_balance(image):
     result[:, :, 1] = np.clip(result[:, :, 1] * scale_g, 0, 255)
     result[:, :, 2] = np.clip(result[:, :, 2] * scale_r, 0, 255)
 
-    return result.astype(np.uint8)
+    frame = result.astype(np.uint8)
+
+    # increase saturation
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(frame)
+    s = np.clip(s * 1.5, 0, 255).astype(np.uint8)
+    frame = cv2.merge([h, s, v])
+    frame = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
+    return frame
 
 if __name__ == "__main__":
     import cv2
