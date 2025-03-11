@@ -25,7 +25,7 @@ class_map = {
     '70' :  'speed limit 70' ,
 }
 
-object_model = YOLO("best.pt")
+object_model = YOLO("best (5).pt")
 # people_model = YOLO("yolov10n.pt")
 def detect_objects(frame: np.ndarray) -> list[tuple[str, int, int, int, int]]:
     """

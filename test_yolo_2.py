@@ -13,11 +13,13 @@ if "darwin" in platform.system().lower():
 elif "linux" in platform.system().lower():
     device = "auto"
 
-model = YOLO("best (3).pt")
-
+model = YOLO("best (5).pt")
 cap = cv2.VideoCapture(0)
 
 while True:
+    # ret, img = cap.read()
+    # if not ret:
+    #     break
     frame = frame_client.recv()
     if frame is None:
         break

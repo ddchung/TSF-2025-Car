@@ -7,9 +7,9 @@ import os
 import white_balance
 import correct_fov
 
-OUT_DIR = "traffic_sign_frames"
+OUT_DIR = "/Users/tin/Desktop/out_frames"
 
-files = glob.glob("/home/tin/Downloads/drive-download/*.mov")
+files = glob.glob("/Users/tin/Desktop/Screen Recording 2025-03-11 at 9.47.25 AM.mov")
 
 if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
@@ -18,6 +18,8 @@ for file in files:
     print(f"Processing {file}")
     cap = cv2.VideoCapture(file)
     while True:
+        for _ in range(30):
+            cap.read()
         ret, frame = cap.read()
         if not ret:
             break
