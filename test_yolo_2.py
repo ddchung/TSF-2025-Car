@@ -13,7 +13,7 @@ if "darwin" in platform.system().lower():
 elif "linux" in platform.system().lower():
     device = "auto"
 
-model = YOLO("best (5).pt")
+model = YOLO("best (6).pt")
 cap = cv2.VideoCapture(0)
 
 while True:
