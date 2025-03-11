@@ -46,31 +46,31 @@ if os.environ.get("RC_CAR_PI_ADDR") or "linux" in platform.system().lower():
         return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
     def SERVO_FL_COMP(angle):
-        angle = int(angle) - 1
+        angle = int(angle) + 1
         if angle == 0:
-            return -10 / 90
+            return -3 / 90
         if angle > 0:
             if angle > 30:
                 angle = 30
-            return MAP_RANGE(angle, 0, 30, -10, 45) / 90
+            return MAP_RANGE(angle, 0, 30, -3, 55) / 90
         if angle < 0:
-            if angle < -45:
-                angle = -45
-            return MAP_RANGE(angle, 0, -45, -10, -90) / 90
+            if angle < -55:
+                angle = -55
+            return MAP_RANGE(angle, 0, -55, -3, -90) / 90
         assert False
     
     def SERVO_FR_COMP(angle):
-        angle = int(angle) - 1
+        angle = int(angle) + 1
         if angle == 0:
-            return -2 / 90
+            return -15 / 90
         if angle > 0:
-            if angle > 45:
-                angle = 45
-            return MAP_RANGE(angle, 0, 45, -2, 90) / 90
+            if angle > 55:
+                angle = 55
+            return MAP_RANGE(angle, 0, 55, -15, 90) / 90
         if angle < 0:
             if angle < -30:
                 angle = -30
-            return MAP_RANGE(angle, 0, -30, -2, -60) / 90
+            return MAP_RANGE(angle, 0, -30, -15, -70) / 90
         assert False
     
     # Lights
@@ -81,8 +81,8 @@ if os.environ.get("RC_CAR_PI_ADDR") or "linux" in platform.system().lower():
 
     PIN_LIST = [SERVO_FR_P, SERVO_FL_P, WHEEL_FL_P1, WHEEL_FL_P2, WHEEL_FR_P1, WHEEL_FR_P2, WHEEL_BL_P1, WHEEL_BL_P2, WHEEL_BR_P1, WHEEL_BR_P2, HEADLIGHTS, TAILLIGHTS, SUN]
 
-    SERVO_FR_OBJ = Servo(SERVO_FR_P, pin_factory=PWM_PIN_FACTORY)
-    SERVO_FL_OBJ = Servo(SERVO_FL_P, pin_factory=PWM_PIN_FACTORY)
+    SERVO_FR_OBJ = Servo(SERVO_FR_P, pin_factory=PWM_PIN_FACTORY, max_pulse_width=2.1/1000)
+    SERVO_FL_OBJ = Servo(SERVO_FL_P, pin_factory=PWM_PIN_FACTORY, min_pulse_width=0.9/1000)
 
     HEADLIGHT_OBJ = PWMOutputDevice(HEADLIGHTS, pin_factory=PWM_PIN_FACTORY)
     TAILLIGHT_OBJ = PWMOutputDevice(TAILLIGHTS, pin_factory=PWM_PIN_FACTORY)
