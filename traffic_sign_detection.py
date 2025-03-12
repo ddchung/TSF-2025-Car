@@ -25,7 +25,7 @@ class_map = {
     '70' :  'speed limit 70' ,
 }
 
-object_model = YOLO("best (6).pt")
+object_model = YOLO("best (9).pt")
 # people_model = YOLO("yolov10n.pt")
 def detect_objects(frame: np.ndarray) -> list[tuple[str, int, int, int, int]]:
     """
@@ -35,7 +35,7 @@ def detect_objects(frame: np.ndarray) -> list[tuple[str, int, int, int, int]]:
 
     x and y are top-left corner
     """
-    objects = object_model.predict(frame, conf=0.4, verbose = False, device=device)
+    objects = object_model.predict(frame, conf=0.5, verbose = False, device=device)
     # people = people_model.predict(frame, conf=0.2, classes=[0], verbose = False, device=device) # chose a much lower value since lego people don't look that similar to people
     detected = []
     for object in objects:

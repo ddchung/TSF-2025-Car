@@ -3,9 +3,9 @@
 from ultralytics import YOLO
 import cv2
 import platform
-import frame_client
-import white_balance
-import correct_fov
+# import frame_client
+# import white_balance
+# import correct_fov
 
 device = None
 if "darwin" in platform.system().lower():
@@ -13,19 +13,19 @@ if "darwin" in platform.system().lower():
 elif "linux" in platform.system().lower():
     device = "auto"
 
-model = YOLO("best (6).pt")
+model = YOLO("best (8).pt")
 cap = cv2.VideoCapture(0)
 
 while True:
-    # ret, img = cap.read()
-    # if not ret:
-    #     break
-    frame = frame_client.recv()
-    if frame is None:
+    ret, img = cap.read()
+    if not ret:
         break
-    frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    frame = correct_fov.correct(frame)
-    img = white_balance.automatic_white_balance(frame)
+    # frame = frame_client.recv()
+    # if frame is None:
+    #     break
+    # frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    # frame = correct_fov.correct(frame)
+    # img = white_balance.automatic_white_balance(frame)
     results = model.predict(img, device=device)
 
     for r in results:
