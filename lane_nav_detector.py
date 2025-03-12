@@ -15,8 +15,9 @@ def predict_steering(image):
     upper_green = (100, 255, 230)
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
-    # convert to grayscale b&w
-    white = 255 * mask
+    white = 255 * np.ones_like(image)
+    white = cv2.bitwise_and(white, white, mask = mask)
+    white = cv2.cvtColor(white, cv2.COLOR_BGR2GRAY)
 
     # crop out top half
     top = int(height/2)
@@ -47,6 +48,7 @@ if __name__ == "__main__":
         if frame is None:
             break
 
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         frame = correct_fov.correct(frame)
         frame = white_balance.automatic_white_balance(frame)
 
