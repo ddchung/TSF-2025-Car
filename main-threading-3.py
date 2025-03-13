@@ -272,7 +272,7 @@ if __name__ == "__main__":
         raise StopIteration
 
     def check_person():
-        THRESHOLD = 0.002 # 0.2%
+        THRESHOLD = 0.001 # 0.1%
         MAX_DISTANCE = 0.5 # max 20% radius, otherwise ignore
 
         global state
@@ -308,9 +308,9 @@ if __name__ == "__main__":
     last_stop_sign_stop = -1
     last_stop_sign_go = 0
     def check_stop_sign():
-        THRESHOLD = 0.002 # 0.2%
-        STOP_TIME = 3 # 3 seconds
-        GET_OUT_TIME = 5 # 5 seconds
+        THRESHOLD = 0.001 # 0.1%
+        STOP_TIME = 3 # seconds
+        GET_OUT_TIME = 1.5 # seconds
 
         global state
         global state_lock
@@ -354,7 +354,8 @@ if __name__ == "__main__":
                 print("Done stopping at stop sign")
                 last_stop_sign_go = now
                 with state_lock:
-                    state[0].speed = 1 # let correct_speed() handle the speed
+                    if state[0].speed == 0:
+                        state[0].speed = 1
                 return
             else:
                 # still stopping
@@ -387,7 +388,8 @@ if __name__ == "__main__":
         # do something
         with state_lock:
             print("Green light detected, going")
-            state[0].speed = 1
+            if state[0].speed == 0:
+                state[0].speed = 1
 
     def go():
         global state
@@ -447,7 +449,7 @@ if __name__ == "__main__":
     def car_update_loop():
         while True:
             update_car()
-            time.sleep(0.01)
+            time.sleep(0.1)
 
     def main_loop():
         global state
