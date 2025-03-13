@@ -1,8 +1,7 @@
 import platform
-import os
 
 # Crude raspberry pi detection
-if os.environ.get("RC_CAR_PI_ADDR") or "linux" in platform.system().lower():
+if "linux" in platform.system().lower():
     from gpiozero.pins.pigpio import PiGPIOFactory
     from gpiozero import Servo
     from gpiozero import PWMOutputDevice
@@ -13,8 +12,7 @@ if os.environ.get("RC_CAR_PI_ADDR") or "linux" in platform.system().lower():
     # 0  0  Stop
 
     # PWM factory
-    host = os.environ.get("RC_CAR_PI_ADDR")
-    PWM_PIN_FACTORY = PiGPIOFactory(host=host)
+    PWM_PIN_FACTORY = PiGPIOFactory()
 
     # Front right
 
