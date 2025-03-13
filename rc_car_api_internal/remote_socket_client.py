@@ -16,6 +16,27 @@ print(f"Connected to {HOST}:{PORT}")
 
 def send(speed, steering, light1, light2, light3):
     global client
+    # temporary workaround
+    if speed <= -100:
+        speed = -99
+    if speed > 100:
+        speed = 100
+    if steering <= -100:
+        steering = -99
+    if steering > 100:
+        steering = 100
+    if light1 < 0:
+        light1 = 0
+    if light1 > 100:
+        light1 = 100
+    if light2 < 0:
+        light2 = 0
+    if light2 > 100:
+        light2 = 100
+    if light3 < 0:
+        light3 = 0
+    if light3 > 100:
+        light3 = 100
     data = f"{speed:03d},{steering:03d},{light1:03d},{light2:03d},{light3:03d};"
     client.sendall(data.encode())
 
