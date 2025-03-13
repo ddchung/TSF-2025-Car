@@ -1,4 +1,10 @@
 from rc_car_api_internal import pins
+import os
+
+if os.environ.get("RC_CAR_PI_ADDR") is not None:
+    from rc_car_api_internal import remote_socket_client
+    pins = remote_socket_client
+
 
 def start_move_forward(speed):
     """speed from 0-100"""
