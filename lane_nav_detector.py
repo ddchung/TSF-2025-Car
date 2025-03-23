@@ -74,7 +74,7 @@ if __name__ == "__main__":
         if key == ord('q'):
             break
         if key == ord('w'):
-            rc_car_api.start_move_forward(100)
+            rc_car_api.start_move_forward(70)
         if key == ord('s'):
             rc_car_api.start_move_backward(50)
         if key == ord(' '):
