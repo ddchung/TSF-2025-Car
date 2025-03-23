@@ -165,6 +165,35 @@ if __name__ == "__main__":
         # return continues with other actions
         # raise StopIteration stops doing other actions
         raise StopIteration
+    
+    cur_brightness = 0
+    def correct_brightness():
+        global state
+        global state_lock
+        global cur_brightness
+
+        TUNE_TO = 0.5 # 50%
+        TOLERANCE = 0.07
+
+        # get frame
+        with state_lock:
+            frame = state[0].frame
+        
+        # get average brightness of bottom half
+        h, w = frame.shape[:2]
+        bottom = h // 2
+        bottom_half = frame[bottom:, :]
+        brightness = np.mean(bottom_half) / 255
+
+        # adjust brightness
+        if brightness < TUNE_TO - TOLERANCE:
+            cur_brightness += 1
+        elif brightness > TUNE_TO + TOLERANCE:
+            cur_brightness -= 1
+        
+        # set brightness
+        with state_lock:
+            state[0].lights[2] = cur_brightness
 
     def check_speed_limit():
         # checks for any `speed limit %d`
@@ -196,21 +225,6 @@ if __name__ == "__main__":
         # set speed limit
         with state_lock:
             state[0].speed_limit = limit
-
-    def correct_speed():
-        global state
-        global state_lock
-
-        with state_lock:
-            cur_speed = state[0].speed
-            speed_limit = state[0].speed_limit
-            if speed_limit < 30:
-                speed_limit = 30
-            if cur_speed > 0:
-                state[0].speed = speed_limit
-            elif cur_speed < 0:
-                state[0].speed = -speed_limit
-            # don't do anything if speed is 0
 
     def check_distance_sensors():
         STOP_THRESHOLD = 5 # 5 cm
@@ -305,17 +319,15 @@ if __name__ == "__main__":
             state[0].speed = 0
         raise StopIteration    
 
-    last_stop_sign_stop = -1
-    last_stop_sign_go = 0
+    last_stop_sign_stop = 0
     def check_stop_sign():
         THRESHOLD = 0.001 # 0.1%
-        STOP_TIME = 3 # seconds
-        GET_OUT_TIME = 1.5 # seconds
+        STOP_TIME = 3
+        BUFFER_TIME = 2
 
         global state
         global state_lock
         global last_stop_sign_stop
-        global last_stop_sign_go
 
         # get objects
         with state_lock:
@@ -332,36 +344,15 @@ if __name__ == "__main__":
                 break
         
         now = time.time()
-        if not found:
-            if now - last_stop_sign_stop < STOP_TIME:
-                with state_lock:
-                    state[0].speed = 0
-                raise StopIteration
-            return
-        # stop for 3 seconds, then go
-        if last_stop_sign_stop < last_stop_sign_go:
-            if now - last_stop_sign_go > GET_OUT_TIME:
-                # give car GET_OUT_TIME seconds to get out
-                print("Detected stop sign, waiting")
-                last_stop_sign_stop = now
-                with state_lock:
-                    state[0].speed = 0
-                raise StopIteration
-        else:
-            # already stopped
-            if now - last_stop_sign_stop > STOP_TIME:
-                # stopped for STOP_TIME seconds
-                print("Done stopping at stop sign")
-                last_stop_sign_go = now
-                with state_lock:
-                    if state[0].speed == 0:
-                        state[0].speed = 1
-                return
-            else:
-                # still stopping
-                with state_lock:
-                    state[0].speed = 0
-                raise StopIteration
+        if found and now - last_stop_sign_stop > STOP_TIME + BUFFER_TIME: 
+            last_stop_sign_stop = now
+        if now - last_stop_sign_stop < STOP_TIME:
+            # stop for some time
+            print("Stop sign detected, stopping")
+            with state_lock:
+                state[0].speed = 0
+            raise StopIteration
+        
 
     def check_green_light():
         THRESHOLD = 0.001 # 0.1%
@@ -398,17 +389,33 @@ if __name__ == "__main__":
         with state_lock:
             if (state[0].speed == 0):
                 state[0].speed = 1
+    
+    def correct_speed():
+        global state
+        global state_lock
+
+        with state_lock:
+            cur_speed = state[0].speed
+            speed_limit = state[0].speed_limit
+            if speed_limit < 30:
+                speed_limit = 30
+            if cur_speed > 0:
+                state[0].speed = speed_limit
+            elif cur_speed < 0:
+                state[0].speed = -speed_limit
+            # don't do anything if speed is 0
 
     # note: top ones have higher priority
     actions = [
+        correct_brightness,
         check_speed_limit,
-        correct_speed,
         check_distance_sensors,
         check_red_light,
         check_person,
         check_stop_sign,
         check_green_light,
-        go
+        go,
+        correct_speed,
     ]
 
     # Input loops
@@ -463,6 +470,8 @@ if __name__ == "__main__":
         threading.Thread(target=car_update_loop, daemon=True).start()
 
         print("Started main loop")
+
+        time.sleep(5) # wait for some time to get some frames
 
         while True:
             with state_lock:
