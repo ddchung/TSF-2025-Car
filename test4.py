@@ -1,6 +1,9 @@
 import cv2
 import sys
 import rc_car_api
+import frame_client
+import white_balance
+import correct_fov
 
 if len(sys.argv) > 1:
 	num = sys.argv[1]
@@ -16,10 +19,12 @@ cap.set(4,240)
 angle = 0
 speed = 0
 while True:
-	ok, img = cap.read()
-	if not ok:
+	frame = frame_client.recv()
+	if frame is None:
 		break
-	img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+	frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+	frame = correct_fov.correct(frame)
+	img = white_balance.automatic_white_balance(frame)
 	cv2.imshow("img",img)
 	c = cv2.waitKey(1)
 	if c == ord('q'):
