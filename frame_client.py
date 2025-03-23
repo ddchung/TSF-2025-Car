@@ -69,10 +69,15 @@ threading.Thread(target=recv_thread, daemon=True).start()
 time.sleep(2) # allow time for the first frame to be received
 
 if __name__ == "__main__":
+    import white_balance
+    import correct_fov
     while True:
         frame = recv()
         if frame is None:
             break
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        frame = correct_fov.correct(frame)
+        frame = white_balance.automatic_white_balance(frame)
         cv2.imshow("frame", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
