@@ -3,9 +3,9 @@
 from ultralytics import YOLO
 import cv2
 import platform
-# import frame_client
-# import white_balance
-# import correct_fov
+import frame_client
+import white_balance
+import correct_fov
 
 device = None
 if "darwin" in platform.system().lower():
@@ -13,20 +13,21 @@ if "darwin" in platform.system().lower():
 elif "linux" in platform.system().lower():
     device = "auto"
 
-model = YOLO("best (8).pt")
-cap = cv2.VideoCapture(0)
+model = YOLO("best (13).pt")
+# cap = cv2.VideoCapture(0)
 
 while True:
-    ret, img = cap.read()
-    if not ret:
-        break
-    # frame = frame_client.recv()
+    # ret, img = cap.read()
+    # if not ret:
+    #     break
+    frame = frame_client.recv()
     # if frame is None:
     #     break
-    # frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    # frame = correct_fov.correct(frame)
-    # img = white_balance.automatic_white_balance(frame)
-    results = model.predict(img, device=device)
+    frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    frame = correct_fov.correct(frame)
+    img = white_balance.automatic_white_balance(frame)
+    # img = frame
+    results = model.predict(img, device=device, conf=0.5)
 
     for r in results:
         for box in r.boxes:
@@ -37,12 +38,15 @@ while True:
             h = int(h)
             x -= w // 2
             y -= h // 2
+            conf = box.conf
+            conf = int(conf * 100)
             name = r.names[int(box.cls)].lower()
+            text = f"{name} {conf}%"
             cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 255), 3)
-            cv2.putText(img, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     cv2.imshow("img", img)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-cap.release()
+# cap.release()
